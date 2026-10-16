@@ -31,11 +31,17 @@ MARGIN_COIN = "USDT"
 # one-way ist ("one_way") — dann werden Exits mit reduceOnly=YES gesendet.
 POS_MODE = "hedge"
 
-# ── Symbole, liquide USDT-M Perps. Hebel wird auf MAX_LEVERAGE gedeckelt. ──
+# ── Symbole. Hebel wird auf MAX_LEVERAGE gedeckelt.
+# Universum-Backtest 18.06.–16.10.2026, BTC/ETH/BNB ausgeschlossen, Default-Parameter.
+# Nur Coins, die in den ersten 80 Tagen und in den letzten 40 Tagen nach Fees positiv waren.
+# Reihenfolge: schwächerer der beiden Abschnitte. Details: backtest/universe_report.md
+# DOGE und SUI sind Krypto-Perps. SNDK, INTC und ANTHROPIC sind Aktien-Perps auf Bitget.
 SYMBOLS = [
-    {"symbol": "BTCUSDT", "leverage": 2},
-    {"symbol": "ETHUSDT", "leverage": 2},
-    {"symbol": "BNBUSDT", "leverage": 2},
+    {"symbol": "DOGEUSDT", "leverage": 2},
+    {"symbol": "SUIUSDT", "leverage": 2},
+    {"symbol": "SNDKUSDT", "leverage": 2},
+    {"symbol": "INTCUSDT", "leverage": 2},
+    {"symbol": "ANTHROPICUSDT", "leverage": 2},
 ]
 
 # ── Bot-Modus ─────────────────────────────────────────────────────────────────

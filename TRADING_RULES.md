@@ -13,7 +13,7 @@ Diese Regeln setzt der Bot durch. Wer sie in der Config aufweicht, umgeht die Sc
 
 5. Nur USDT-M Perpetuals (`USDT-FUTURES`), Standard Isolated.
 6. Positionsmodus Hedge, wie V2. `side` ist im Hedge die Positionsrichtung: Close-Long ist `side=buy` und `tradeSide=close`. Das ist der Reduce-only-Exit. `reduceOnly=YES` geht nur im One-Way-Modus (`POS_MODE = "one_way"`), ohne `tradeSide`.
-7. Symbole nur aus `SYMBOLS`, Default BTCUSDT, ETHUSDT, BNBUSDT.
+7. Symbole nur aus `SYMBOLS`. Default nach dem Universum-Backtest: DOGEUSDT, SUIUSDT, SNDKUSDT, INTCUSDT, ANTHROPICUSDT. BTC, ETH und BNB sind dort bewusst nicht enthalten.
 8. Hebel pro Symbol höchstens `MAX_LEVERAGE` (Default 3), Default 2. Ein V2-Wert von 5× wird auf 3× gekürzt.
 9. Höchstens `MAX_ACTIVE_GRIDS` Grids gleichzeitig (Default 1).
 

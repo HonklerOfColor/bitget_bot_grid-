@@ -57,7 +57,7 @@ Live versucht außerdem einen Börsen-Stop auf der ganzen Long- bzw. Short-Lage 
 
 ## Parameter (Defaults)
 
-Hebel 2, Deckel 3, Isolated, Hedge. Ein Grid zur Zeit. Paper-Kapital, wenn kein Kontostand lesbar ist: 50 USDT. Loop 20 Sekunden. Symbole BTCUSDT, ETHUSDT, BNBUSDT.
+Hebel 2, Deckel 3, Isolated, Hedge. Ein Grid zur Zeit. Paper-Kapital, wenn kein Kontostand lesbar ist: 50 USDT. Loop 20 Sekunden. Default-Symbole nach dem Universum-Backtest ohne BTC, ETH und BNB: DOGEUSDT, SUIUSDT, SNDKUSDT, INTCUSDT, ANTHROPICUSDT. Herleitung und die negativen Kontroll-Portfolios stehen in [backtest/universe_report.md](backtest/universe_report.md).
 
 Die vollständige Liste steht in `config.example.py`. Fehlende Felder in einem eingeworfenen V2-`config.py` fallen auf diese Defaults zurück. Der Hebel wird gekappt, auch wenn dort 5 steht.
 

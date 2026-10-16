@@ -23,10 +23,23 @@ def run_backtest(
     params: GridParams,
     equity0: float,
     leverage: int | None = None,
+    start_index: int = 0,
 ) -> dict:
-    """Ein Symbol, eigenes Startkapital. Notausstiege zahlen Taker plus Slippage."""
+    """Ein Symbol, eigenes Startkapital. Notausstiege zahlen Taker plus Slippage.
+
+    start_index lässt frühere Kerzen nur als Indikator-Warmup stehen. Fills und
+    neue Grids beginnen dort — für einen Out-of-Sample-Abschnitt ohne Lookahead.
+    """
     lev = leverage if leverage is not None else params.leverage
-    return _run({spec.symbol: candles}, {spec.symbol: spec}, {spec.symbol: lev}, params, equity0, portfolio=False)
+    return _run(
+        {spec.symbol: candles},
+        {spec.symbol: spec},
+        {spec.symbol: lev},
+        params,
+        equity0,
+        portfolio=False,
+        start_index=start_index,
+    )
 
 
 def run_portfolio(
@@ -35,8 +48,17 @@ def run_portfolio(
     leverage: dict[str, int],
     params: GridParams,
     equity0: float,
+    start_index: int = 0,
 ) -> dict:
-    return _run(candles_by_symbol, specs, leverage, params, equity0, portfolio=True)
+    return _run(
+        candles_by_symbol,
+        specs,
+        leverage,
+        params,
+        equity0,
+        portfolio=True,
+        start_index=start_index,
+    )
 
 
 def _align(candles_by_symbol: dict[str, list[Candle]]) -> dict[str, list[Candle]]:
@@ -59,6 +81,7 @@ def _run(
     params: GridParams,
     equity0: float,
     portfolio: bool,
+    start_index: int = 0,
 ) -> dict:
     symbols = list(candles_by_symbol)
     series = _align(candles_by_symbol) if portfolio else candles_by_symbol
@@ -84,6 +107,11 @@ def _run(
     grids_started = 0
     exit_reasons: Counter[str] = Counter()
     maker_fills = 0
+    profit_sum = 0.0
+    loss_sum = 0.0
+    closed_wins = 0
+    closed_losses = 0
+    start_index = max(0, min(start_index, max(length - 1, 0)))
 
     def equity_at(mark_by_symbol: dict[str, float]) -> float:
         if grid is None:
@@ -93,11 +121,19 @@ def _run(
 
     def bank(reason: str, mark: float) -> None:
         nonlocal grid, active, banked, banked_realized, banked_fees, banked_funding, taker_fees
+        nonlocal profit_sum, loss_sum, closed_wins, closed_losses
         assert grid is not None
         before_fees = grid.fees
         grid.flatten(mark, params.taker_slippage_pct, params.taker_fee)
         taker_fees += grid.fees - before_fees
-        banked += grid.net_pnl(mark)
+        episode = grid.net_pnl(mark)
+        if episode > 0:
+            profit_sum += episode
+            closed_wins += 1
+        elif episode < 0:
+            loss_sum += episode
+            closed_losses += 1
+        banked += episode
         banked_realized += grid.realized
         banked_fees += grid.fees
         banked_funding += grid.funding
@@ -106,7 +142,7 @@ def _run(
         grid = None
         active = ""
 
-    for i in range(length):
+    for i in range(start_index, length):
         marks = {symbol: series[symbol][i].close for symbol in symbols}
         now = series[symbols[0]][i]
         equity = equity_at(marks)
@@ -189,7 +225,7 @@ def _run(
     fees = banked_fees + open_fees
     funding = banked_funding + open_funding
     return {
-        "bars": length,
+        "bars": length - start_index,
         "start_equity": equity0,
         "end_equity": final,
         "net": final - equity0,
@@ -208,6 +244,10 @@ def _run(
         "exits": dict(exit_reasons),
         "counts": dict(counts),
         "open_symbol": grid.symbol if grid is not None else "",
-        "from_ts": series[symbols[0]][0].ts if length else 0,
+        "from_ts": series[symbols[0]][start_index].ts if length else 0,
         "to_ts": series[symbols[0]][length - 1].ts if length else 0,
+        "breakout_exits": int(exit_reasons.get("breakout", 0)),
+        "profit_factor": (profit_sum / abs(loss_sum)) if loss_sum < 0 else None,
+        "closed_grid_wins": closed_wins,
+        "closed_grid_losses": closed_losses,
     }
